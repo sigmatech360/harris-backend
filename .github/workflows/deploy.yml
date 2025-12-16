@@ -1,9 +1,9 @@
 name: Harris Backend CI/CD
 
 on:
-  push:        # Trigger on every commit push
+  push:
     branches:
-      - main   # Replace 'main' with your actual branch name if different
+      - main
 
 jobs:
   build-and-deploy:
@@ -23,10 +23,7 @@ jobs:
         run: composer install --no-dev --optimize-autoloader
 
       - name: Run PHPUnit tests
-        run: vendor/bin/phpunit || echo "Tests failed, skipping deploy"
-
-      - name: Package build
-        run: zip -r harris-backend.zip . -x "*.git*" "node_modules/*" ".env" "tests/*"
+        run: vendor/bin/phpunit
 
       - name: FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
@@ -34,15 +31,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: .
-          server-dir: /public_html/releases/${{ github.run_number }}
-          dangerous-clean-slate: true
-
-      - name: Run migrations
-        run: php artisan migrate --force
-
-      - name: Clear caches
-        run: php artisan config:clear && php artisan cache:clear && php artisan route:clear
-
-      - name: Link storage
-        run: php artisan storage:link
+          local-dir: ./
+          server-dir: /public_html/
+          dangerous-clean-slate: false
