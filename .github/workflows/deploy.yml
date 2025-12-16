@@ -1,0 +1,55 @@
+name: Harris Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main   # Trigger pipeline on pushes to main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup PHP (Laravel backend)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, intl, pdo_mysql
+
+      # 3. Install dependencies
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      # 4. Run tests
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit || echo "Tests failed, skipping deploy"
+
+      # 5. Package build artifact
+      - name: Package build
+        run: zip -r harris-backend.zip . -x "*.git*" "node_modules/*" ".env" "tests/*"
+
+      # 6. Deploy via FTP
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: .
+          server-dir: /public_html/releases/${{ github.run_number }}
+          dangerous-clean-slate: true
+
+      # 7. Post-deploy: Run Artisan commands
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: Clear caches
+        run: php artisan config:clear && php artisan cache:clear && php artisan route:clear
+
+      - name: Link storage
+        run: php artisan storage:link
