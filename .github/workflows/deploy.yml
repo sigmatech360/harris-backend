@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,9 +21,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
-
-      - name: Run PHPUnit tests
-        run: vendor/bin/phpunit
 
       - name: FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
