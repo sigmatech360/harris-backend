@@ -1,13 +1,18 @@
-name: Test Workflow
+name: Harris FTP Deploy
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
-  test:
+  ftp-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Say Hello
-        run: echo "Workflow started successfully"
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Test step
+        run: echo "Workflow triggered successfully"
