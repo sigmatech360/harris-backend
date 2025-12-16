@@ -1,9 +1,7 @@
 name: Harris Backend CI/CD
 
 on:
-  push:
-    branches:
-      - main   # Trigger pipeline on pushes to main branch
+  workflow_dispatch:   # Manual trigger only
 
 jobs:
   build-and-deploy:
