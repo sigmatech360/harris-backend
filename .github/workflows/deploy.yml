@@ -1,0 +1,40 @@
+name: Deploy Laravel API
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Change this to your server's PHP version
+
+      - name: 📦 Prepare Dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: 🚀 Sync to FTP Folder
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Path on your server (relative to FTP root)
+          server-dir: ./harris-backend/ 
+          # We EXCLUDE things that aren't needed for the API to run
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            node_modules/**
+            tests/**
+            phpunit.xml
+            .env.example
+            README.md
