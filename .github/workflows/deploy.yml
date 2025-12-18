@@ -1,26 +1,28 @@
-name: Deploy Laravel API
+name: Deploy Harris Laravel API
 
 on:
   push:
     branches:
-      - main
+      - master  # <--- MUST match your repo's branch name exactly
 
 jobs:
-  deploy-api:
+  deploy:
+    name: FTP Upload
     runs-on: ubuntu-latest
     steps:
-      - name: 🚚 Checkout Code
+      - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
       - name: 🛠️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Change this to your server's PHP version
+          php-version: '8.2'
 
-      - name: 📦 Prepare Dependencies
+      - name: 📦 Install Composer Dependencies
+        # Since it's an API with no build, we just need the vendor folder
         run: composer install --no-dev --optimize-autoloader
 
-      - name: 🚀 Sync to FTP Folder
+      - name: 🚀 Sync to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -28,13 +30,10 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           # Path on your server (relative to FTP root)
           server-dir: ./harris-backend/ 
-          # We EXCLUDE things that aren't needed for the API to run
           exclude: |
             **/.git*
             **/.git*/**
+            **/node_modules/**
             .github/**
-            node_modules/**
             tests/**
-            phpunit.xml
-            .env.example
-            README.md
+            .env
