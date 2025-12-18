@@ -3,11 +3,11 @@ name: Deploy Harris Laravel API
 on:
   push:
     branches:
-      - master  # <--- MUST match your repo's branch name exactly
+      - master  # Matches your repo's branch name
 
 jobs:
   deploy:
-    name: FTP Upload
+    name: Build and FTP Upload
     runs-on: ubuntu-latest
     steps:
       - name: 🚚 Get latest code
@@ -19,8 +19,20 @@ jobs:
           php-version: '8.2'
 
       - name: 📦 Install Composer Dependencies
-        # Since it's an API with no build, we just need the vendor folder
+        # Generates the 'vendor' folder required for the API to function
         run: composer install --no-dev --optimize-autoloader
+
+      - name: 📝 Create .htaccess for Root Access
+        # This file redirects all traffic into the /public folder silently
+        run: |
+          cat <<EOF > .htaccess
+          <IfModule mod_rewrite.c>
+              RewriteEngine On
+              # Redirect all traffic to the public directory
+              RewriteCond %{REQUEST_URI} !^/public/
+              RewriteRule ^(.*)$ public/\$1 [L]
+          </IfModule>
+          EOF
 
       - name: 🚀 Sync to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -28,8 +40,8 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Path on your server (relative to FTP root)
-          server-dir: ./harris-backend/ 
+          # Deploying to root so the API works at backend.myvirtualpi.com
+          server-dir: ./ 
           exclude: |
             **/.git*
             **/.git*/**
